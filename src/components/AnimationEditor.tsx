@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { LayerPanel } from './LayerPanel';
 import { PropertiesPanel } from './PropertiesPanel';
@@ -302,16 +303,16 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white">
+    <div className="h-full flex flex-col bg-gray-50 text-gray-900">
       {/* Header */}
-      <div className="h-12 bg-gray-800 border-b border-gray-700 flex items-center px-4">
-        <h1 className="text-lg font-semibold text-gray-100">Motion Editor</h1>
+      <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
+        <h1 className="text-lg font-semibold text-gray-800">Motion Editor</h1>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex">
         {/* Left Panel */}
-        <div className="w-80 bg-gray-850 border-r border-gray-700 flex flex-col">
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           <LayerPanel 
             layers={layers}
             selectedLayerId={selectedLayerId}
@@ -321,7 +322,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
         </div>
 
         {/* Center Canvas */}
-        <div className="flex-1 bg-gray-900 flex flex-col">
+        <div className="flex-1 bg-gray-100 flex flex-col">
           <Canvas 
             layers={layers}
             selectedLayerId={selectedLayerId}
@@ -330,7 +331,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
           />
           
           {/* Timeline */}
-          <div className="h-48 bg-gray-800 border-t border-gray-700">
+          <div className="h-48 bg-white border-t border-gray-200 shadow-sm">
             <Timeline 
               layers={layers}
               currentTime={currentTime}
@@ -345,7 +346,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="w-80 bg-gray-850 border-l border-gray-700">
+        <div className="w-80 bg-white border-l border-gray-200">
           <PropertiesPanel 
             layer={selectedLayer}
             onPropertyChange={updateLayerProperty}

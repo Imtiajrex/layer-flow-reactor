@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { Layer } from './AnimationEditor';
@@ -85,41 +86,41 @@ export const Timeline: React.FC<TimelineProps> = ({
   };
 
   return (
-    <div className="h-full bg-gray-800 flex flex-col">
+    <div className="h-full bg-white flex flex-col border-t border-gray-200">
       {/* Controls */}
-      <div className="h-12 bg-gray-750 border-b border-gray-700 flex items-center px-4 space-x-4">
+      <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center px-4 space-x-4">
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onTimeChange(0)}
-            className="p-2 hover:bg-gray-600 rounded transition-colors"
+            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
           >
-            <SkipBack className="w-4 h-4 text-gray-300" />
+            <SkipBack className="w-4 h-4 text-gray-600" />
           </button>
           
           <button
             onClick={isPlaying ? onPause : onPlay}
-            className="p-2 hover:bg-gray-600 rounded transition-colors"
+            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4 text-gray-300" />
+              <Pause className="w-4 h-4 text-gray-600" />
             ) : (
-              <Play className="w-4 h-4 text-gray-300" />
+              <Play className="w-4 h-4 text-gray-600" />
             )}
           </button>
           
           <button
             onClick={() => onTimeChange(duration)}
-            className="p-2 hover:bg-gray-600 rounded transition-colors"
+            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
           >
-            <SkipForward className="w-4 h-4 text-gray-300" />
+            <SkipForward className="w-4 h-4 text-gray-600" />
           </button>
         </div>
 
-        <div className="text-sm font-mono text-gray-300">
+        <div className="text-sm font-mono text-gray-700 bg-white px-2 py-1 rounded border border-gray-300">
           {formatTime(currentTime)}
         </div>
 
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-500">
           / {formatTime(duration)}
         </div>
       </div>
@@ -127,9 +128,9 @@ export const Timeline: React.FC<TimelineProps> = ({
       {/* Timeline */}
       <div className="flex-1 flex">
         {/* Layer Names */}
-        <div className="w-48 bg-gray-750 border-r border-gray-700">
-          <div className="h-8 bg-gray-700 border-b border-gray-600 flex items-center px-3">
-            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wide">
+        <div className="w-48 bg-gray-50 border-r border-gray-200">
+          <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center px-3">
+            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
               Layers
             </span>
           </div>
@@ -137,13 +138,13 @@ export const Timeline: React.FC<TimelineProps> = ({
           {layers.map((layer) => (
             <div
               key={layer.id}
-              className="h-12 border-b border-gray-700/50 flex items-center px-3"
+              className="h-12 border-b border-gray-200/70 flex items-center px-3 hover:bg-gray-100"
             >
               <div 
-                className="w-3 h-3 rounded mr-2 border border-gray-600"
+                className="w-3 h-3 rounded mr-2 border border-gray-300"
                 style={{ backgroundColor: layer.properties.color }}
               />
-              <span className="text-sm text-gray-300 truncate">
+              <span className="text-sm text-gray-700 truncate">
                 {layer.name}
               </span>
             </div>
@@ -153,14 +154,14 @@ export const Timeline: React.FC<TimelineProps> = ({
         {/* Timeline Track */}
         <div className="flex-1 relative">
           {/* Time Ruler */}
-          <div className="h-8 bg-gray-700 border-b border-gray-600 relative">
+          <div className="h-8 bg-gray-100 border-b border-gray-200 relative">
             {Array.from({ length: Math.ceil(duration) + 1 }, (_, i) => (
               <div
                 key={i}
-                className="absolute top-0 h-full border-l border-gray-600 flex items-center"
+                className="absolute top-0 h-full border-l border-gray-300 flex items-center"
                 style={{ left: `${(i / duration) * 100}%` }}
               >
-                <span className="text-xs text-gray-400 ml-1">{i}s</span>
+                <span className="text-xs text-gray-600 ml-1">{i}s</span>
               </div>
             ))}
           </div>
@@ -175,14 +176,14 @@ export const Timeline: React.FC<TimelineProps> = ({
             {layers.map((layer, layerIndex) => (
               <div
                 key={layer.id}
-                className="h-12 border-b border-gray-700/50 relative hover:bg-gray-700/30"
+                className="h-12 border-b border-gray-200/70 relative hover:bg-gray-50"
               >
                 {/* Keyframes */}
                 {Object.entries(layer.keyframes).map(([property, keyframes]) =>
                   keyframes.map((keyframe, index) => (
                     <div
                       key={`${property}-${index}`}
-                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-400 transition-colors z-10"
+                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-600 transition-colors z-10 border border-white shadow-sm"
                       style={{ left: `${getKeyframePosition(keyframe.time)}%` }}
                       title={`${property}: ${keyframe.value} at ${keyframe.time.toFixed(2)}s`}
                       onMouseDown={(e) => e.stopPropagation()}
@@ -198,7 +199,7 @@ export const Timeline: React.FC<TimelineProps> = ({
               className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-20"
               style={{ left: `${(currentTime / duration) * 100}%` }}
             >
-              <div className="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white pointer-events-auto cursor-ew-resize" />
+              <div className="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white pointer-events-auto cursor-ew-resize shadow-md" />
             </div>
           </div>
         </div>
@@ -206,3 +207,4 @@ export const Timeline: React.FC<TimelineProps> = ({
     </div>
   );
 };
+

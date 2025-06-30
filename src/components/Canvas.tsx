@@ -52,6 +52,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     return (
       <div
         key={layer.id}
+        data-layer-id={layer.id}
         style={baseStyle}
         onClick={(e) => handleLayerClick(layer.id, e)}
         className="hover:border-blue-400"

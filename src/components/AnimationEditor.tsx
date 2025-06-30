@@ -53,7 +53,18 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
         opacity: 1,
         color: '#3b82f6',
       },
-      keyframes: {},
+      keyframes: {
+        x: [
+          { time: 0, value: 100 },
+          { time: 2, value: 300 },
+          { time: 4, value: 100 }
+        ],
+        rotation: [
+          { time: 0, value: 0 },
+          { time: 2, value: 180 },
+          { time: 4, value: 360 }
+        ]
+      },
     },
     {
       id: '2',
@@ -72,7 +83,24 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
         opacity: 1,
         color: '#ef4444',
       },
-      keyframes: {},
+      keyframes: {
+        y: [
+          { time: 0, value: 200 },
+          { time: 1.5, value: 100 },
+          { time: 3, value: 300 },
+          { time: 4.5, value: 200 }
+        ],
+        scaleX: [
+          { time: 0, value: 1 },
+          { time: 2, value: 1.5 },
+          { time: 4, value: 1 }
+        ],
+        scaleY: [
+          { time: 0, value: 1 },
+          { time: 2, value: 1.5 },
+          { time: 4, value: 1 }
+        ]
+      },
     },
   ]);
 
@@ -82,14 +110,103 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     // Initialize GSAP timeline
-    timelineRef.current = gsap.timeline({ paused: true });
+    timelineRef.current = gsap.timeline({ 
+      paused: true,
+      onUpdate: () => {
+        if (timelineRef.current) {
+          setCurrentTime(timelineRef.current.time());
+        }
+      },
+      onComplete: () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+        timelineRef.current?.seek(0);
+      }
+    });
+
+    buildTimeline();
+
     return () => {
       timelineRef.current?.kill();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, []);
+  }, [layers]);
+
+  const buildTimeline = () => {
+    if (!timelineRef.current) return;
+    
+    // Clear existing timeline
+    timelineRef.current.clear();
+    
+    // Build animations for each layer
+    layers.forEach(layer => {
+      if (!layer.visible) return;
+      
+      const layerElement = document.querySelector(`[data-layer-id="${layer.id}"]`);
+      if (!layerElement) return;
+
+      // Process each property that has keyframes
+      Object.entries(layer.keyframes).forEach(([property, keyframes]) => {
+        if (keyframes.length === 0) return;
+
+        // Sort keyframes by time
+        const sortedKeyframes = [...keyframes].sort((a, b) => a.time - b.time);
+        
+        // Create animation between keyframes
+        for (let i = 0; i < sortedKeyframes.length - 1; i++) {
+          const currentKf = sortedKeyframes[i];
+          const nextKf = sortedKeyframes[i + 1];
+          const duration = nextKf.time - currentKf.time;
+          
+          let gsapProperty = property;
+          let value = nextKf.value;
+          
+          // Map properties to GSAP format
+          switch (property) {
+            case 'x':
+            case 'y':
+              value = `${nextKf.value}px`;
+              break;
+            case 'rotation':
+              gsapProperty = 'rotation';
+              value = nextKf.value;
+              break;
+            case 'scaleX':
+            case 'scaleY':
+              value = nextKf.value;
+              break;
+            case 'opacity':
+              value = nextKf.value;
+              break;
+            case 'width':
+            case 'height':
+              value = `${nextKf.value}px`;
+              break;
+          }
+          
+          timelineRef.current.to(layerElement, {
+            duration: duration,
+            [gsapProperty]: value,
+            ease: 'power2.inOut'
+          }, currentKf.time);
+        }
+      });
+    });
+
+    // Set timeline duration
+    timelineRef.current.duration(duration);
+  };
+
+  // Rebuild timeline when layers change
+  useEffect(() => {
+    buildTimeline();
+  }, [layers, duration]);
 
   const selectedLayer = layers.find(layer => layer.id === selectedLayerId);
 
@@ -145,6 +262,43 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
     
     setCurrentTime(time);
     timelineRef.current.seek(time);
+    
+    // Update layer properties based on current time
+    updateLayerPropertiesAtTime(time);
+  };
+
+  const updateLayerPropertiesAtTime = (time: number) => {
+    setLayers(prev => prev.map(layer => {
+      const newProperties = { ...layer.properties };
+      
+      // Interpolate values for each property with keyframes
+      Object.entries(layer.keyframes).forEach(([property, keyframes]) => {
+        if (keyframes.length === 0) return;
+        
+        const sortedKeyframes = [...keyframes].sort((a, b) => a.time - b.time);
+        
+        // Find the keyframes to interpolate between
+        let value = sortedKeyframes[0].value;
+        
+        for (let i = 0; i < sortedKeyframes.length - 1; i++) {
+          const current = sortedKeyframes[i];
+          const next = sortedKeyframes[i + 1];
+          
+          if (time >= current.time && time <= next.time) {
+            // Linear interpolation
+            const progress = (time - current.time) / (next.time - current.time);
+            value = current.value + (next.value - current.value) * progress;
+            break;
+          } else if (time > next.time) {
+            value = next.value;
+          }
+        }
+        
+        newProperties[property as keyof typeof newProperties] = value;
+      });
+      
+      return { ...layer, properties: newProperties };
+    }));
   };
 
   return (

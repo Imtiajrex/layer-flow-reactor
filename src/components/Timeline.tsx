@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { Layer } from './AnimationEditor';
 
@@ -26,15 +26,50 @@ export const Timeline: React.FC<TimelineProps> = ({
 }) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    if (!timelineRef.current) return;
+  const getTimeFromPosition = (clientX: number) => {
+    if (!timelineRef.current) return 0;
     
     const rect = timelineRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = x / rect.width;
-    const newTime = Math.max(0, Math.min(duration, percentage * duration));
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    return percentage * duration;
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    const newTime = getTimeFromPosition(e.clientX);
+    onTimeChange(newTime);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
     
+    const newTime = getTimeFromPosition(e.clientX);
+    onTimeChange(newTime);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
+  const handleTimelineClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    
+    const newTime = getTimeFromPosition(e.clientX);
     onTimeChange(newTime);
   };
 
@@ -133,7 +168,8 @@ export const Timeline: React.FC<TimelineProps> = ({
           {/* Timeline Tracks */}
           <div
             ref={timelineRef}
-            className="relative cursor-pointer"
+            className="relative cursor-pointer select-none"
+            onMouseDown={handleMouseDown}
             onClick={handleTimelineClick}
           >
             {layers.map((layer, layerIndex) => (
@@ -146,9 +182,10 @@ export const Timeline: React.FC<TimelineProps> = ({
                   keyframes.map((keyframe, index) => (
                     <div
                       key={`${property}-${index}`}
-                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-400 transition-colors"
+                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-400 transition-colors z-10"
                       style={{ left: `${getKeyframePosition(keyframe.time)}%` }}
                       title={`${property}: ${keyframe.value} at ${keyframe.time.toFixed(2)}s`}
+                      onMouseDown={(e) => e.stopPropagation()}
                     />
                   ))
                 )}
@@ -158,10 +195,10 @@ export const Timeline: React.FC<TimelineProps> = ({
             {/* Current Time Indicator */}
             <div
               ref={scrubberRef}
-              className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-10"
+              className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-20"
               style={{ left: `${(currentTime / duration) * 100}%` }}
             >
-              <div className="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
+              <div className="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white pointer-events-auto cursor-ew-resize" />
             </div>
           </div>
         </div>

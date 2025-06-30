@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { LayerPanel } from './LayerPanel';
 import { PropertiesPanel } from './PropertiesPanel';
@@ -294,7 +293,8 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
           }
         }
         
-        newProperties[property as keyof typeof newProperties] = value;
+        // Fix the type error by properly typing the property assignment
+        (newProperties as any)[property] = value;
       });
       
       return { ...layer, properties: newProperties };

@@ -343,7 +343,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
         </div>
       </div>
           {/* Timeline */}
-          <div className="h-48 fixed bottom-0 bg-white border-t border-gray-200 shadow-sm">
+          <div className="h-48 fixed w-full bottom-0 bg-white border-t border-gray-200 shadow-sm">
             <Timeline 
               layers={layers}
               currentTime={currentTime}

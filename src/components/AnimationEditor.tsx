@@ -1,9 +1,16 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { LayerPanel } from './LayerPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { Timeline } from './Timeline';
 import { Canvas } from './Canvas';
+import { Button } from './ui/button';
+import { Plus, Square, Circle, Type } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import gsap from 'gsap';
 
 export interface Layer {
@@ -235,12 +242,66 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
     ));
   };
 
+  const removeKeyframe = (layerId: string, property: string, keyframeIndex: number) => {
+    setLayers(prev => prev.map(layer => 
+      layer.id === layerId 
+        ? {
+            ...layer,
+            keyframes: {
+              ...layer.keyframes,
+              [property]: (layer.keyframes[property] || []).filter((_, index) => index !== keyframeIndex)
+            }
+          }
+        : layer
+    ));
+  };
+
   const toggleLayer = (layerId: string) => {
     setLayers(prev => prev.map(layer => 
       layer.id === layerId 
         ? { ...layer, visible: !layer.visible }
         : layer
     ));
+  };
+
+  const addLayer = (type: 'rectangle' | 'circle' | 'text') => {
+    const newId = Date.now().toString();
+    const typeNames = {
+      rectangle: 'Rectangle',
+      circle: 'Circle',
+      text: 'Text'
+    };
+    
+    const newLayer: Layer = {
+      id: newId,
+      name: `${typeNames[type]} ${layers.length + 1}`,
+      type,
+      visible: true,
+      locked: false,
+      properties: {
+        x: 150 + (layers.length * 20),
+        y: 150 + (layers.length * 20),
+        width: type === 'circle' ? 80 : (type === 'text' ? 120 : 200),
+        height: type === 'circle' ? 80 : (type === 'text' ? 40 : 100),
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        opacity: 1,
+        color: type === 'rectangle' ? '#3b82f6' : (type === 'circle' ? '#ef4444' : '#10b981'),
+        text: type === 'text' ? 'Sample Text' : undefined,
+      },
+      keyframes: {},
+    };
+
+    setLayers(prev => [...prev, newLayer]);
+    setSelectedLayerId(newId);
+  };
+
+  const deleteLayer = (layerId: string) => {
+    setLayers(prev => prev.filter(layer => layer.id !== layerId));
+    if (selectedLayerId === layerId) {
+      setSelectedLayerId(layers.length > 1 ? layers[0].id : null);
+    }
   };
 
   const playAnimation = () => {
@@ -307,10 +368,36 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
       {/* Header */}
       <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
         <h1 className="text-lg font-semibold text-gray-800">Motion Editor</h1>
+        
+        {/* Add Element Dropdown */}
+        <div className="ml-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Element
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => addLayer('rectangle')} className="gap-2">
+                <Square className="w-4 h-4" />
+                Rectangle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addLayer('circle')} className="gap-2">
+                <Circle className="w-4 h-4" />
+                Circle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addLayer('text')} className="gap-2">
+                <Type className="w-4 h-4" />
+                Text
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex" style={{ height: 'calc(100vh - 240px)' }}>
         {/* Left Panel */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           <LayerPanel 
@@ -318,6 +405,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
             selectedLayerId={selectedLayerId}
             onLayerSelect={setSelectedLayerId}
             onLayerToggle={toggleLayer}
+            onLayerDelete={deleteLayer}
           />
         </div>
 
@@ -329,7 +417,6 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
             onLayerSelect={setSelectedLayerId}
             onLayerUpdate={updateLayerProperty}
           />
-          
         </div>
 
         {/* Right Panel */}
@@ -338,23 +425,26 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
             layer={selectedLayer}
             onPropertyChange={updateLayerProperty}
             onKeyframeAdd={addKeyframe}
+            onKeyframeRemove={removeKeyframe}
             currentTime={currentTime}
           />
         </div>
       </div>
-          {/* Timeline */}
-          <div className="h-48 fixed w-full bottom-0 bg-white border-t border-gray-200 shadow-sm">
-            <Timeline 
-              layers={layers}
-              currentTime={currentTime}
-              duration={duration}
-              isPlaying={isPlaying}
-              onTimeChange={seekTo}
-              onPlay={playAnimation}
-              onPause={pauseAnimation}
-              onKeyframeAdd={addKeyframe}
-            />
-          </div>
+
+      {/* Timeline */}
+      <div className="h-48 bg-white border-t border-gray-200 shadow-sm">
+        <Timeline 
+          layers={layers}
+          currentTime={currentTime}
+          duration={duration}
+          isPlaying={isPlaying}
+          onTimeChange={seekTo}
+          onPlay={playAnimation}
+          onPause={pauseAnimation}
+          onKeyframeAdd={addKeyframe}
+          onKeyframeRemove={removeKeyframe}
+        />
+      </div>
     </div>
   );
 };

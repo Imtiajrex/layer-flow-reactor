@@ -1,8 +1,7 @@
-
-
 import React, { useRef, useEffect, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, X } from 'lucide-react';
 import { Layer } from './AnimationEditor';
+import { Button } from './ui/button';
 
 interface TimelineProps {
   layers: Layer[];
@@ -13,6 +12,7 @@ interface TimelineProps {
   onPlay: () => void;
   onPause: () => void;
   onKeyframeAdd: (layerId: string, property: string, time: number, value: any) => void;
+  onKeyframeRemove: (layerId: string, property: string, keyframeIndex: number) => void;
 }
 
 export const Timeline: React.FC<TimelineProps> = ({
@@ -24,10 +24,16 @@ export const Timeline: React.FC<TimelineProps> = ({
   onPlay,
   onPause,
   onKeyframeAdd,
+  onKeyframeRemove,
 }) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const scrubberRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [hoveredKeyframe, setHoveredKeyframe] = useState<{
+    layerId: string;
+    property: string;
+    index: number;
+  } | null>(null);
 
   const getTimeFromPosition = (clientX: number) => {
     if (!timelineRef.current) return 0;
@@ -85,35 +91,43 @@ export const Timeline: React.FC<TimelineProps> = ({
     return (time / duration) * 100;
   };
 
+  const handleKeyframeRemove = (layerId: string, property: string, keyframeIndex: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onKeyframeRemove(layerId, property, keyframeIndex);
+  };
+
   return (
     <div className="h-full bg-white flex flex-col border-t border-gray-200">
       {/* Controls */}
       <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center px-4 space-x-4">
         <div className="flex items-center space-x-2">
-          <button
+          <Button
             onClick={() => onTimeChange(0)}
-            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
+            size="sm"
+            variant="outline"
           >
-            <SkipBack className="w-4 h-4 text-gray-600" />
-          </button>
+            <SkipBack className="w-4 h-4" />
+          </Button>
           
-          <button
+          <Button
             onClick={isPlaying ? onPause : onPlay}
-            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
+            size="sm"
+            variant="outline"
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4 text-gray-600" />
+              <Pause className="w-4 h-4" />
             ) : (
-              <Play className="w-4 h-4 text-gray-600" />
+              <Play className="w-4 h-4" />
             )}
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={() => onTimeChange(duration)}
-            className="p-2 hover:bg-gray-200 rounded transition-colors border border-gray-300"
+            size="sm"
+            variant="outline"
           >
-            <SkipForward className="w-4 h-4 text-gray-600" />
-          </button>
+            <SkipForward className="w-4 h-4" />
+          </Button>
         </div>
 
         <div className="text-sm font-mono text-gray-700 bg-white px-2 py-1 rounded border border-gray-300">
@@ -183,11 +197,26 @@ export const Timeline: React.FC<TimelineProps> = ({
                   keyframes.map((keyframe, index) => (
                     <div
                       key={`${property}-${index}`}
-                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-600 transition-colors z-10 border border-white shadow-sm"
+                      className="absolute top-1/2 transform -translate-y-1/2 w-2 h-6 bg-blue-500 rounded cursor-pointer hover:bg-blue-600 transition-colors z-10 border border-white shadow-sm group"
                       style={{ left: `${getKeyframePosition(keyframe.time)}%` }}
                       title={`${property}: ${keyframe.value} at ${keyframe.time.toFixed(2)}s`}
                       onMouseDown={(e) => e.stopPropagation()}
-                    />
+                      onMouseEnter={() => setHoveredKeyframe({ layerId: layer.id, property, index })}
+                      onMouseLeave={() => setHoveredKeyframe(null)}
+                    >
+                      {hoveredKeyframe?.layerId === layer.id && 
+                       hoveredKeyframe?.property === property && 
+                       hoveredKeyframe?.index === index && (
+                        <Button
+                          onClick={(e) => handleKeyframeRemove(layer.id, property, index, e)}
+                          size="sm"
+                          variant="destructive"
+                          className="absolute -top-8 -left-3 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   ))
                 )}
               </div>
@@ -207,4 +236,3 @@ export const Timeline: React.FC<TimelineProps> = ({
     </div>
   );
 };
-

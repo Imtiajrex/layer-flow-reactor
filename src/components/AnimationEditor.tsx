@@ -303,7 +303,7 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 text-gray-900">
+    <div className="h-full flex flex-col bg-gray-50 text-gray-900 relative">
       {/* Header */}
       <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
         <h1 className="text-lg font-semibold text-gray-800">Motion Editor</h1>

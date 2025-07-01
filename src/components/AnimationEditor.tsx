@@ -330,6 +330,18 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
             onLayerUpdate={updateLayerProperty}
           />
           
+        </div>
+
+        {/* Right Panel */}
+        <div className="w-80 bg-white border-l border-gray-200">
+          <PropertiesPanel 
+            layer={selectedLayer}
+            onPropertyChange={updateLayerProperty}
+            onKeyframeAdd={addKeyframe}
+            currentTime={currentTime}
+          />
+        </div>
+      </div>
           {/* Timeline */}
           <div className="h-48 bg-white border-t border-gray-200 shadow-sm">
             <Timeline 
@@ -343,18 +355,6 @@ export const AnimationEditor: React.FC<AnimationEditorProps> = () => {
               onKeyframeAdd={addKeyframe}
             />
           </div>
-        </div>
-
-        {/* Right Panel */}
-        <div className="w-80 bg-white border-l border-gray-200">
-          <PropertiesPanel 
-            layer={selectedLayer}
-            onPropertyChange={updateLayerProperty}
-            onKeyframeAdd={addKeyframe}
-            currentTime={currentTime}
-          />
-        </div>
-      </div>
     </div>
   );
 };
